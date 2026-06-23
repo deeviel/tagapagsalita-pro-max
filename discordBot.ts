@@ -649,6 +649,36 @@ export async function initDiscordBot(
         });
       }
 
+      client.on('voiceStateUpdate', async (oldState, newState) => {
+        try {
+          if (!newState.member || newState.member.user.bot) return;
+
+          const oldChannelId = oldState.channelId;
+          const newChannelId = newState.channelId;
+
+          const memberName = newState.member.displayName || newState.member.user.username;
+          const lang = globalSettings.voiceLang || 'en';
+
+          if (!oldChannelId && newChannelId) {
+            // Joined a channel
+            debugLog(`${memberName} joined channel ${newChannelId}. Announcing...`);
+            await playAudioInVoiceChannels(`${memberName} joined the channel`, [newChannelId], lang, true);
+          } else if (oldChannelId && !newChannelId) {
+            // Left a channel
+            const oldMemberName = oldState.member?.displayName || oldState.member?.user.username || memberName;
+            debugLog(`${oldMemberName} left channel ${oldChannelId}. Announcing...`);
+            await playAudioInVoiceChannels(`${oldMemberName} left the channel`, [oldChannelId], lang, true);
+          } else if (oldChannelId && newChannelId && oldChannelId !== newChannelId) {
+            // Moved channels
+            debugLog(`${memberName} moved from ${oldChannelId} to ${newChannelId}. Announcing...`);
+            await playAudioInVoiceChannels(`${memberName} left the channel`, [oldChannelId], lang, true);
+            await playAudioInVoiceChannels(`${memberName} joined the channel`, [newChannelId], lang, true);
+          }
+        } catch (err: any) {
+          debugLog(`Error in voiceStateUpdate: ${err.message}`);
+        }
+      });
+
       client.on('error', (err) => {
         debugLog(`Discord client error event: ${err.message}`);
       });
