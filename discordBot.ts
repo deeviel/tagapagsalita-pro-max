@@ -505,11 +505,16 @@ export interface DiscordBotSettings {
 
 export async function initDiscordBot(
   globalSettings: DiscordBotSettings,
-  token?: string
+  token?: string,
+  isStartup = false
 ): Promise<void> {
   const currentToken = (token || process.env.DISCORD_TOKEN || '').trim();
   // Prevent login attempt with obvious invalid or placeholder tokens
   if (!currentToken || currentToken === 'undefined' || currentToken.length < 50 || currentToken.includes("INSERT_YOUR_DISCORD_BOT_TOKEN_HERE")) {
+    if (isStartup) {
+      debugLog("Discord Bot token not set or is a placeholder. Skipping startup initialization.");
+      return;
+    }
     throw new Error("Invalid token format.");
   }
 
@@ -649,7 +654,16 @@ export async function initDiscordBot(
       });
 
       client.login(currentToken).catch(err => {
-        reject(err);
+        if (isStartup && err.message?.includes('An invalid token was provided')) {
+          debugLog("Startup login check: The provided Discord token is invalid or inactive.");
+          if (client) {
+            try { client.destroy(); } catch (e) {}
+          }
+          client = null;
+          resolve();
+        } else {
+          reject(err);
+        }
       });
     });
   };

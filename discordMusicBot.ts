@@ -643,9 +643,13 @@ export function setGlobalMusicVolume(volume: number) {
   }
 }
 
-export async function initDiscordMusicBot(token?: string): Promise<void> {
+export async function initDiscordMusicBot(token?: string, isStartup = false): Promise<void> {
   const currentToken = (token || process.env.DISCORD_MUSIC_TOKEN || '').trim();
   if (!currentToken || currentToken.length < 50 || currentToken.includes("INSERT_YOUR_DISCORD_BOT_TOKEN_HERE")) {
+    if (isStartup) {
+      debugLog("Discord Music Bot token not set or is a placeholder. Skipping startup initialization.");
+      return;
+    }
     throw new Error("Invalid token format.");
   }
 
@@ -732,7 +736,16 @@ export async function initDiscordMusicBot(token?: string): Promise<void> {
       });
 
       client.login(currentToken).catch((err: any) => {
-        reject(err);
+        if (isStartup && err.message?.includes('An invalid token was provided')) {
+          debugLog("Startup login check: The provided Discord Music token is invalid or inactive.");
+          if (client) {
+            try { client.destroy(); } catch (e) {}
+          }
+          client = null;
+          resolve();
+        } else {
+          reject(err);
+        }
       });
     });
   };
@@ -745,8 +758,12 @@ export async function initDiscordMusicBot(token?: string): Promise<void> {
       GatewayIntentBits.MessageContent 
     ]);
   } catch (err: any) {
-    debugLog(`Initial login failed: ${err.message}`);
-    throw err;
+    if (isStartup) {
+      debugLog(`Initial login bypassed: ${err.message}`);
+    } else {
+      debugLog(`Initial login failed: ${err.message}`);
+      throw err;
+    }
   }
 }
 

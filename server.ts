@@ -295,10 +295,10 @@ async function startServer() {
 
   // Initialize Discord Bot
   if (process.env.DISCORD_TOKEN) {
-    initDiscordBot(globalSettings).then(() => {
+    initDiscordBot(globalSettings, undefined, true).then(() => {
       console.log("Discord bot successfully initialized on startup.");
     }).catch((e: any) => {
-      console.error("Failed to initialize discord bot on startup (invalid token or connection error):", e.message || e);
+      console.log("Note: Discord bot startup initialization skipped or bypassed.");
     });
   } else {
     console.log("DISCORD_TOKEN environment variable is not set. Discord features are disabled.");
@@ -309,13 +309,13 @@ async function startServer() {
       if (globalSettings.youtubeCookie) {
         await applyYoutubeCookie(globalSettings.youtubeCookie);
       }
-      initDiscordMusicBot().then(() => {
+      initDiscordMusicBot(undefined, true).then(() => {
         console.log("Discord music bot successfully initialized on startup.");
       }).catch((e: any) => {
-        console.error("Failed to initialize discord music bot on startup (invalid token or connection error):", e.message || e);
+        console.log("Note: Discord music bot startup initialization skipped or bypassed.");
       });
     }).catch((e: any) => {
-      console.error("Failed to import or initialize discord music bot on startup:", e.message || e);
+      console.log("Note: Failed to import or initialize discord music bot on startup:", e.message || e);
     });
   }
 }
