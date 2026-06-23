@@ -1,0 +1,6 @@
+{
+  "name": "TTS Discord Bot",
+  "description": "A streamlined Discord bot dedicated to text-to-speech functionality in voice channels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mafia Secretary</title>
+    <script>
+      // Gracefully capture and suppress generic cross-origin "Script error." which typically
+      // bubble up from browser extensions or hosting iframe injection overlays.
+      window.addEventListener('error', function(event) {
+        if (!event) return;
+        const msg = event.message || '';
+        if (msg.includes('Script error') || msg.includes('Script error.') || !msg) {
+          console.warn('[Micro-Frontend Safeguard] Suppressed browser/extension-injected cross-origin script error.');
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(event) {
+        if (!event) return;
+        const msg = event.reason ? (event.reason.message || String(event.reason)) : '';
+        if (msg.includes('Script error')) {
+          console.warn('[Micro-Frontend Safeguard] Suppressed browser/extension-injected cross-origin unhandled rejection.');
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          return true;
+        }
+      }, true);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

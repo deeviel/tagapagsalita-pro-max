@@ -1,0 +1,1 @@
+import * as g from 'google-tts-api'; console.log(g.getAudioUrl('aargh', {lang: 'en-US'}))
